@@ -1,129 +1,125 @@
-The Reactive Manifesto
+Reactive-манифест 
 ----------------------
 
-[Sign the manifesto](http://www.reactivemanifesto.org/)
+[Подпишите манифест](http://www.reactivemanifesto.org/)
 
-## The Need to Go Reactive
+## Потребность перехода к Reactive
 
-Application requirements have changed dramatically in recent years. Only a few years ago a large application had tens of servers, seconds of response time, hours of offline maintenance and gigabytes of data. Today applications are deployed on everything from mobile devices to cloud-based clusters running thousands of multicore processors. Users expect millisecond response times and 100% uptime. Data needs are expanding into the petabytes.
+Требования к приложениям кардинально изменились в последние годы. Только несколько лет назад большие приложения требовали десятки серверов для развертывания, обладали временем отклика порядка секунд, требовали часов оффлайн-обслуживания и обрабатывали гигабайты данных. Сегодня приложения развертываются на разнообразных платформах от мобильных устройств до облачных кластеров с тысячами многоядерных процессоров. При этом пользователи ожидают время отклика порядка миллисекунд и 100% доступности, а объемы данных приближаются к петабайтам. 
 
-Initially the domain of innovative internet-driven companies like Google or Twitter, these application characteristics are surfacing in most industries. Finance and telecommunication were the first to adopt new practices to satisfy the new requirements and others have followed.
+Первоначально первопроходцами в этой области были такие интернет-компании как Google и Twitter, но сейчас подобные требования к приложениям начинают появляться и в других отраслях. Финансовая сфера и телекоммуникации были первыми, кто принял новые практики для удовлетворения новых потребностей. За ними последовали другие отрасли.
 
-New requirements demand new technologies. Previous solutions have emphasized managed servers and containers. Scaling was achieved through buying larger servers and concurrent processing via multi-threading. Additional servers were added through complex, inefficient and expensive proprietary solutions.
+Новые потребности требуют новых технологий. Предшествующие решения фокусировались на управляемых серверах и контейнерах. Масштабируемость достигалась посредством покупки более мощных сервером и одновременной многопоточной обработки (multi-threading). Процедура добавления дополнительных серверов выполнялась с помощью сложных, неэффективных и дорогих проприетарных решений.
 
-But now a new architecture has evolved to let developers conceptualize and build applications that satisfy today’s demands. We call these *Reactive Applications*. This architecture allows developers to build systems that are *event-driven, scalable, resilient and interactive*: delivering highly interactive user experiences with a real-time feel, backed by a scalable and resilient application stack, ready to be deployed on multicore and cloud computing architectures. The Reactive Manifesto describes these critical traits which are needed for *going reactive*.
+Сейчас появился новый тип архитектуры, позволяющий разработчикам проектировать и разрабатывать приложения, удовлетворяющие сегодняшним потребностям. Мы называем их *reactive-приложения*. Этот тип архитектуры позволяет разработчикам создавать *событийно-ориентированные*, *масштабируемые*, *отказоустойчивые* и *интерактивные* системы, обеспечивая пользователям высокоинтерактивное взаимодействие с системой с ощущением отклика в реальном времени. Такие системы построены на масштабируемом и отказоустойчивом стеке приложений и готовы к развертыванию на многопроцессорных и облачных платформах. Reactive-манифест описывает отличительные черты, необходимые для соответствия термину *"reactive"*.
 
-## Reactive Applications
+## Reactive-приложения
 
-Merriam-Webster defines reactive as *“readily responsive to a stimulus”*, i.e. its components are “active” and always ready to receive events. This definition captures the essence of reactive applications, focusing on systems that:
+Словарь Мериэм-Вебстер определяет "reactive" как *"готовый к отклику на воздействие"*, т.е. его компоненты "активны" и готовы к возникновению событий. Это определение описывает сущность reactive-приложений, выделяя такие системы, которые:
+- *реагируют на события*: событийно-ориентированная природа обеспечивает остальные качества
+- *реагируют на нагрузку*: фокусируются на масштабируемости нежели на производительности для отдельного пользователя
+- *реагируют на отказ*: отказоустойчивы, спроектированы с возможностью восстановления после отказа на любом уровне
+- *реагируют на действия пользователя*: комбинируют предыдущие особенности, обеспечивая интерактивное взаимодействия пользователя с системой
 
-- *react to events*: the event-driven nature enables the following qualities
-- *react to load*: focus on scalability rather than single-user performance
-- *react to failure*: build resilient systems with the ability to recover at all levels
-- *react to users*: combine the above traits for an interactive user experience
+Каждая из этих характеристик является важнейшей для reactive-приложений. Несмотря на то, что между ними есть зависимости, эти черты не являются подобием уровней (tiers) в стандартном понимании архитектуры многоуровневых приложений. Вместо этого эти качества описывают свойство архитектуры, которые применимы для всего технологического стека. 
 
-Each one of these is an essential characteristic of a reactive application. While there are dependencies between them, these traits are not like tiers in a standard layered application architecture sense. Instead they describe design properties that apply across the whole technology stack.
+![Рис. 1 Качества reactive-приложений](images/stack.png)
 
-![fig. 1 The Reactive Traits](images/stack.png)
+Далее мы более детально рассмотрим каждое из этих четырех качества и как они взаимосвязаны друг с другом.
 
-In the following we will take a deeper look at each of the four qualities and see how they relate to each other.
+## Событийно-ориентированная архитектура
 
-## Event-driven
+### Почему это важно
 
-### Why it is Important
+Приложение, построенное на принципах асинхронной коммуникации, само по себе ведет к архитектуре *с низкой связанностью* (loosely coupled design), причем намного лучшей, чем у приложения, построенного только на синхронном вызове методов. Отправитель и получатель могут быть реализованы безотносительно деталей того, как передаются события, позволяя программному интерфейсу сфокусироваться непосредственно на данных, участвующих в коммуникации. Это ведет к реализации, более простой для расширения, развития и поддержки, что обеспечивает лучшую гибкость и снижает стоимость поддержки. 
 
-An application based on asynchronous communication implements a *loosely coupled* design, much better so than one based purely on synchronous method calls. The sender and recipient can be implemented without regards to the details of how the events are propagated, allowing the interfaces to focus on the content of the communication. This leads to an implementation which is easier to extend, evolve and maintain, giving you more flexibility and reducing maintenance cost.
+Так как получатель в асинхронном взаимодействии может оставаться в спящем состоянии до тех пор, пока не произойдет событие или будет получено сообщение, то событийно-ориентированный подход делает возможным эффективное использование ресурсов, позволяя огромному количеству получателей совместно использовать один физический поток выполнения. По этой причине неблокирующие приложения под высокой нагрузкой показывают более *низкое время отклика* и *большую пропускную способность*, чем традиционные приложения, основанные на блокирующей синхронизации и примитивах взаимодействия. Это ведет к более низким операционным издержкам, улучшенной утилизации ресурсов и, кроме того, к большему удовлетворению конечных пользователей.
 
-Since the recipient of asynchronous communication can remain dormant until an event occurs or a message is received, an event-driven approach can make efficient use of existing resources, allowing large numbers of recipients to share a single hardware thread. A non-blocking application that is under heavy load can thus have *lower latency and higher throughput* than a traditional application based on blocking synchronization and communication primitives. This results in lower operational costs, increased utilization and happier end-users.
+### Основные строительные блоки
 
-### Key Building Blocks
+В событийно-ориентированном приложении компоненты взаимодействуют друг с другом посредством создания и обработки *событий* - дискретных порций информации, описывающих некоторые факты. Эти события отправляются и получаются в асинхронной и неблокирующей манере. Событийно-ориентированные системы более полагаются на "проталкивание" (*push*), чем на "вытягивание" (*pull* or *poll*) данных, т.е. они отдают данные их потребителям в том момент, когда эти данные готовы, вместо того чтобы тратить впустую ресурсы, заставляя потребителей непрерывно делать запросы или ожидать данные.
 
-In an event-driven application the components interact with each other through the production and consumption of *events* — discrete pieces of information describing facts. These events are sent and received in an asynchronous and non-blocking fashion. Event-driven systems tend to rely on *push* rather than *pull* or *poll*, i.e. they push data towards consumers when it is available instead of wasting resources by having the consumers continually ask for or wait on the data.
+* *Асинхронная* отправка событий, также известная как "передача сообщений" (*message-passing*), означает то, что приложения способно к одновременной обработке множества запросов по своей природе и может использовать многоядерное железо без каких-либо доработок. Любое ядро в процессоре способно обрабатывать любое событие, что означает исключительное увеличение возможностей по параллелизации. 
+* *"Неблокирующий"* означает, что приложение очень эффективно в терминах использовании аппаратных ресурсов, так как неактивные компоненты приостанавливаются и их ресурсы освобождаются для использования другими компонентами.
 
-- *Asynchronous*     sending of events — also called *message-passing* — means that the application is highly concurrent by design and can make use of multicore hardware without changes. Any core within a CPU is able to process any message event, leading to a dramatic increase in opportunities for parallelization.
-- *Non-blocking* means that the application is very efficient in terms of hardware utilization since inactive components are suspended and their resources are released, to be used by other components.
+Традиционные серверные архитектуры основаны на совместно используемом изменяемом состоянии и блокирующих операциях в одном потоке. И то и другое ведет к трудностям, когда такую систему необходимо масштабировать для удовлетворения изменившихся требований. Совместное использование изменяемого состояния требует синхронизации, следствием которой является недетерминизм и сложность, связанная с побочными эффектами, что делает программный код трудным для понимания и поддержки. Перевод потока в спящее состояние посредством блокировки расходует ограниченные ресурсы и подразумевает высокую цену для его возобновления. 
 
-Traditional server-side architectures rely on shared mutable state and blocking operations on a single thread. Both contribute to the difficulties encountered when scaling such a system to meet changing demands. Sharing mutable state requires synchronization, which introduces incidental complexity and non-determinism, making the program code hard to understand and maintain. Putting a thread to sleep by blocking uses up a finite resource and incurs a high wake-up cost.
+Разделение генерации события и его обработки позволяет среде выполнения заботиться о деталях синхронизации и о маршрутизации событии по потокам выполнения, при этом образуется программная абстракция уже на уровне бизнес-процессов. Вы размышляете о том, каким образом через вашу систему распространяются события и каким образом взаимодействуют компоненты, вместо того чтобы возиться с низкоуровневыми примитивами вроде потоков выполнения и блокировок.
 
-The decoupling of event generation and processing allows the runtime platform to take care of the synchronization details and how events are dispatched across threads, while the programming abstraction is raised to the level of business workflows. You think about how events propagate through your system and how components interact instead of fiddling around with low-level primitives such as threads and locks.
+Событийно-ориентированные системы делают возможным низкую связанность между компонентами и подсистемами. Этот уровень косвенности, как мы рассмотрим в дальнейшем, является необходимым условием для масштабируемости и отказоустойчивости. Удаляя сложные и сильные зависимости между компонентами, событийно-ориентированные приложения могут быть расширяемы с минимальными изменениями существующего кода. 
 
-Event-driven systems enable loose coupling between components and subsystems. This level of indirection is, as we will see, one of the prerequisites for scalability and resilience. By removing complex and strong dependencies between components, event-driven applications can be extended with minimal impact on the existing application.
+Когда приложения находятся в жестких рамках требований высокой производительности и масштабируемости, то трудно предположить где могут возникнуть узкие места. По этой причине важно, чтобы всё решение было полностью асинхронным и неблокирующим. В типичном случае это значит, что вся архитектура должна быть событийно-ориентированной - это проявляется во всем, начиная от пользовательского запроса на клиенте (в браузере, REST-клиенте и т.д.), а также в обработке и диспетчеризации запроса в веб-слое, в сервисных компонентах в слое бизнес-логики, в отношении кэширования и, наконец, в работе с базой данных. Если один из этих слоёв не участвует - выполняются блокирующие вызовы к базе данных, применяется общее изменяемое состояние, выполняются обращения к затратным синхронным операциям, - то тогда тормозит весь конвейер, что означает для пользователей увеличение времени отклика и ограничения по масштабируемости.
 
-When applications are stressed by requirements for high performance and large scalability it is difficult to predict where bottlenecks will arise. Therefore it is important that the entire solution is asynchronous and non-blocking. In a typical example this means that the design needs to be event-driven from the user request in the UI (in the browser, REST client or elsewhere) to the request parsing and dispatching in the web layer, to the service components in the middleware, through the caching and down to the database. If one of these layers does not participate — making blocking calls to the database, relying on shared mutable state, calling out to expensive synchronous operations — then the whole pipeline stalls and users will suffer through increased latency and reduced scalability.
+Приложение должно быть *реактивным на всех уровнях*.
 
-An application must be *reactive from top to bottom*.
+Потребность в исключении самого слабого звена в цепи хорошо иллюстрируется законом Амдаля (Amdahl's Law), который, согласно Википедии, говорит о следующем:
+> Ускорение выполнения программы с использованием множества процессоров для параллельного вычисления ограничено той частью программы, которая выполняется последовательно. Например, если 95% процентов программы может быть распараллелено, то теоретический максимум ускорения с использованием параллельных вычислений, как показано на диаграмме, составляет 20 раз в независимости от того, как много процессоров используется.
 
-The need for eliminating the weakest link in the chain is well illustrated by Amdahl’s Law, which according to Wikipedia is explained as:
+![Рис. 2 Закон Амдаля](images/amdahl.png)
 
-> The speedup of a program using multiple processors in parallel computing is limited by the sequential fraction of the program. For example, if 95% of the program can be parallelized, the theoretical maximum speedup using parallel computing would be 20× as shown in the diagram, no matter how many processors are used.
+## Масштабируемость (scalable)
 
-![fig. 2 Amdahl's Law](images/amdahl.png)
+### Почему это важно
+Слову "scalable" в словаре Мэриэм-Вебстер дано следующее определение *"способность к простому расширению или модернизации по мере необходимости"*. Масштабируемое приложение обладает способностью к расширению в зависимости от его использования. Это может быть достигнуто посредством придания приложению свойства эластичности, т.е. способности к горизонтальному масштабированию ("scaling out and in" - добавлению и удалению узлов) по запросу. Кроме того, такая архитектура делает простым вертикальное масштабирование ("scaling up and down" - развертывание узлов с большим или меньшим количеством процессоров) без перепроектирования или переписывания приложения. Эластичность делает возможным минимизацию операционных издержек для функционирования приложений в облачной инфраструктуре, позволяя вам получать выгоду от использования модели оплаты только за используемые ресурсы. 
 
-## Scalable
+Масштабируемость также помогает в управлении рисками: если вы предоставите недостаточный объем серверных мощностей для текущей нагрузки, то это приведет к разочарованию пользователей и потере клиентов, если же вы используете слишком много серверов (а ведь еще нужен дополнительный персонал для их обслуживания), то это ведет к простаивающим без какой-либо пользы ресурсам и излишним расходам. Масштабируемое решение также снижает риск получить приложение, которое не в состоянии использовать новое железо: мы увидим процессоры с сотнями, если не тысячами, аппаратных потоков выполнения в течение следующей декады, и для использования их потенциала требуется приложение масштабируемое на очень детальном уровне. 
 
-### Why it is Important
+### Основные строительные блоки
+Событийно-ориентированные системы построенные на передаче сообщений обеспечивают основу для масштабируемости. Такие системы подразумевают низкую связанность между компонентами и подсистемами и это делает возможным горизонтальное масштабирование системы на множество узлов, сохраняя ту же самую программную модель и ее семантику. Добавление большего количество экземпляров компоненты увеличивает пропускную способность системы в обработке событий. В смысле реализации нет никакой разницы между вертикальным масштабированием путем использования множества процессоров и горизонтальным масштабированием с помощью использования большего количества узлов в дата-центре или кластере. Топология приложения становится решением при развертывании, которое реализуется через конфигурацию и/или с помощью адаптивных алгоритмов времени выполнения, реагирующих на использование приложения. Это то, что мы называем «независимость от месторасположения» [location transparency] (http://en.wikipedia.org/wiki/Location_transparency).
 
-The word scalable is defined by Merriam-Webster as *“capable of being easily expanded or upgraded on demand”*. A scalable application is able to be expanded according to its usage. This can be achieved by adding elasticity to the application, the option of being able to scale out or in (add or remove nodes) on demand. In addition, the architecture makes it easy to scale up or down (deploying on a node with more or fewer CPUs) without redesigning or rewriting the application. Elasticity makes it possible to minimize the cost of operating applications in a cloud computing environment, allowing you to profit from its virtualized pay-for-what-you-use model.
+Важно понимать, что целью является не реализация прозрачных распределенных вычислений, распределенных объектов или взаимодействия в стиле вызова удаленных процедур (RPC) - были попытки сделать это раньше и они провалились. Вместо этого мы должны использовать сетевую модель в качестве программной модели с асинхронной передачей сообщений. Истинная масштабируемость естественным образом подразумевает распределенные вычисления, подразумевающие межузловое взаимодействие, которое означает передачу данных по сети, что, как нам известно, по своей природе ненадежно. Поэтому так важно в программной модели сделать явными все ограничения, недостатки и сценарии обработки ошибок, присущие сетевому программированию, вместо того чтобы скрывать их с помощью "текущих" (leaky) абстракций в попытках "упростить" вещи. Как следствие, не менее важно предоставить программные инструменты, инкапсулирующие общие строительные блоки для решения типичных проблем, возникающих в распределенном окружении - такие механизмы как достижение консенсуса или абстракции в передаче сообщений, предоставляющие лучшие степени надежности. 
 
-Scalability also helps managing risk: providing too little hardware to keep up with user load leads to dissatisfaction and loss of customers, having too much hardware — and operations personnel — idling for no good reason results in unnecessary expense. A scalable solution also mitigates the risk of ending up with an application that is unable to make use of new hardware becoming available: we will see processors with hundreds, if not thousands of hardware threads within the next decade and utilizing their potential requires the application to be scalable at a very fine-grained level.
+## Отказоустойчивость (resilient)
 
-### Key Building Blocks
+### Почему это важно
 
-An event-driven system based on asynchronous message-passing provides the foundation for scalability. It enables loose coupling between components and subsystems and thus makes it possible to scale out the system onto multiple nodes while retaining the same programming model with the same semantics. Adding more instances of a component increases the system’s capacity to process events. In terms of implementation there is no difference between scaling up by utilizing multiple cores or scaling out by utilizing more nodes in a datacenter or cluster. The topology of the application becomes a deployment decision which is expressed through configuration and/or adaptive runtime algorithms responding to application usage. This is what we call [location transparency](http://en.wikipedia.org/wiki/Location_transparency).
+Неработоспобность приложения является одной из тех проблем, которые могут причинить наибольший ущерб бизнесу. Обычно это означает, что все операции просто останавливаются, образуя дыру в потоке доходов. В долгосрочной перспективе это также ведет к неудовлетворенным клиентам и дурной репутации, что ударит по бизнесу более серьезно. Это удивительно, но отказоустойчивость приложения — это такое требование, которое обычно игнорируется или видоизменяется с помощью специфических трюков. Это означает, что оно реализуется на неверном уровне детализации с использованием слишком грубых инструментов. Обычной техникой является кластеризация сервера для восстановления во время выполнения в случае отказа. К несчастью, обеспечение отказоустойчивости сервера чрезвычайно затратное дело и к тому же опасное - потенциально это может привести к каскадному отказу и неработоспособности всего кластера. Причина этого в том, что это неправильный уровень детализации для управления отказами, вместо этого требуется реализация на подходящем уровне детализации - обеспечение устойчивости на уровне компонент.
 
-It is important to understand that the goal is not to try to implement transparent distributed computing, distributed objects or RPC-style communication — this has been tried before and it has failed. Instead we need to *embrace the network* by representing it directly in the programming model through asynchronous message-passing. True scalability naturally involves distributed computing and with that inter-node communication which means traversing the network, that as we know is [inherently unreliable](http://aphyr.com/posts/288-the-network-is-reliable). It is therefore important to make the constraints, trade-offs and failure scenarios of network programming explicit in the programming model instead of hiding them behind leaky abstractions that try to “simplify” things. As a consequence it is equally important to provide programming tools which encapsulate common building blocks for solving the typical problems arising in a distributed environment — like mechanisms for achieving consensus or messaging abstractions which offer higher degrees of reliability.
+Словарь Мэриэм-Вебстер определяет устойчивость (resilient) как:
 
-## Resilient
+- *способность субстанции или объекта восстанавливать свою форму*
+- *возможность быстрого восстановления после трудностей*
 
-### Why it is Important
+Для reactive-приложений отказоустойчивость — это не решение принятое на поздних этапах, а часть архитектуры с самого начала. Представление сбоя в программной модели в качестве полноправного объекта придает осмысленности в обработке и управлении сбоями, что позволяет создавать высокоустойчивые к сбоям приложения с возможностью самовосстанавливаться во время выполнения. Традиционный способ обработки ошибок не может достичь этого, т.к. он прибегает к защитной стратегии в малом и к агрессивной в большом масштабе - вы либо обрабатываете исключение в тот момент, когда оно возникло, и в том же месте, либо инициируете отказ всего экземпляра приложения целиком.
 
-Application downtime is one of the most damaging issues that can occur to a business. The usual implication is that operations simply stop, leaving a hole in the revenue stream. In the long term it can also lead to unhappy customers and a poor reputation, which will hurt the business more severely. It is surprising that application resilience is a requirement that is largely ignored or retrofitted using ad-hoc techniques. This often means that it is addressed at the wrong level of granularity using tools that are too coarse-grained. A common technique uses application server clustering to recover from runtime and server failures. Unfortunately, server failover is extremely costly and also dangerous — potentially leading to cascading failures taking down a whole cluster. The reason is that this is the wrong level of granularity for failure management which should instead be addressed using fine-grained resilience on the component level.
+### Основные строительные блоки
 
-Merriam-Webster defines resilience as:
+Для *управления отказом* нам требуется *изолировать* его, чтобы он не распространился на остальные функционирующие компоненты, и *наблюдать* его из безопасной точки вовне контекста произошедшего сбоя. Один из шаблонов, который приходит на ум, - [модель отсеков] (bulkhead pattern http://skife.org/architecture/fault-tolerance/2009/12/31/bulkheads.html), проиллюстрированная на картинке. В этой модели система построена из безопасных отделений таким образом, что в случае отказа одного элемента остальные не затронуты. Это предотвращает классическую проблему [каскадного отказа] (http://en.wikipedia.org/wiki/Cascading_failure) и позволяет решать проблемы изолированно. 
 
-- *the ability of a substance or object to spring back into shape*
-- *the capacity to recover quickly from difficulties*
+![Рис. 3 Отсеки](images/tank.png)
 
-In a reactive application resilience is not an afterthought but part of the design from the beginning. Making failure a first class construct in the programming model provides the means to react to and manage it, which leads to applications that are highly tolerant to failure by being able to heal and repair themselves at runtime. Traditional fault handling cannot achieve this because it is defensive in the small and too aggressive in the large — you either handle exceptions right where and when they happen or you initiate a failover of the whole application instance.
+Событийно-управляемая модель, делая возможным масштабирование, также обладает необходимыми примитивами для реализации такой модели управления отказами. Низкая связанность в событийно-ориентированной модели предоставляет полностью изолированные компоненты, внутри которых сбои могут быть отслежены вместе с их контекстом, инкапсулированы в сообщения, и переданы другим компонентам, которые отслеживают ошибки и могут принять решения каким образом реагировать. 
 
-### Key Building Blocks
+Такой подход создает систему, в которой бизнес-логика остаётся прозрачной, отделенной от логики обработки непредвиденных ситуаций. Сбой моделируется явно для того, чтобы быть классифицированным, наблюдаемым, управляемым и конфигурируемым в декларативном стиле. Такая система самовосстанавливается автоматически. Это работает наилучшим образом, если части структурированы иерархически, подобно большой корпорации, где каждая проблема передаётся наверх до того уровня, который обладает полномочиями для ее решения.
 
-In order to *manage failure* we need a way to *isolate* it so it doesn’t spread to other healthy components, and to *observe* it so it can be managed from a safe point outside of the failed context. One pattern that comes to mind is the [bulkhead pattern](http://skife.org/architecture/fault-tolerance/2009/12/31/bulkheads.html), illustrated by the picture, in which a system is built up from safe compartments so that if one of them fails the other ones are not affected. This prevents the classic problem of [cascading failures](http://en.wikipedia.org/wiki/Cascading_failure) and allows the management of problems in isolation.
+Красота этой модели в том, что она полностью событийно-ориентированна, основана на реагирующих компонентах и асинхронных событиях и поэтому *независима от месторасположения*. На практике это означает, что система работает в распределенном окружении с той же семантикой, что и в локальном. 
 
-![fig 3 Bulkheads](images/tank.png)
+## Интерактивность (interactive)
 
-The event-driven model, which enables scalability, also has the necessary primitives to realize this model of failure management. The loose coupling in an event-driven model provides fully isolated components in which failures can be captured together with their context, encapsulated as messages, and sent off to other components that can inspect the error and decide how to respond.
+### Почему это важно
 
-This approach creates a system where business logic remains clean, separated from the handling of the unexpected, where failure is modeled explicitly in order to be compartmentalized, observed, managed and configured in a declarative way, and where the system can heal itself and recover automatically. It works best if the compartments are structured in a hierarchical fashion, much like a large corporation where a problem is escalated upwards until a level is reached which has the power to deal with it.
+Интерактивные приложения взаимодействуют в реальном времени, увлекательны и позволяют работать совместно. Бизнес создает открытый и продолжающийся диалог со своими клиентами с помощью интерактивного взаимодействия. Это делает такие компании более эффективными, создает чувство соединенности и возможности решения проблем и выполнения задач. Один из таких примеров - Google Документы, которые позволяют пользователям редактировать документы совместно, в реальном времени. Пользователи могут видеть изменения и комментарии непосредственно в тот момент, как они создаются. 
 
-The beauty of this model is that it is purely event-driven, based upon reactive components and asynchronous events and therefore *location transparent*. In practice this means that it works in a distributed environment with the same semantics as in a local context.
+Пользователям обладают исключительными возможностями, когда они могут взаимодействовать с данными, преобразуемыми в осмысленную информацию в реальном времени. Интерактивные приложения делают совместную работу с информаций присущей любому интерфейсу, таким образом люди взаимодействуют эффективнее и чаще. Это усиливается по мере изменения детализации обратной связи - от традиционного обновления всей страницы к обновлению отдельных элементов, например в одностраничном веб-клиенте электронной почты. Моментальные социальные взаимодействия через огромные расстояния радикально изменяют то, каким образом люди вовлечены во взаимодействие с информацией и друг с другом. Например, GitHub посредством интерактивного браузерного приложения революционным образом воздействует на совместную работу разработчиков через "социальное программирование". И конечно же Twitter также глубоко изменил способ распространения новостей.
 
-## Interactive
+Построенные на событийно-ориентированном подходе, reactive-приложения достаточно хорошо оснащены, чтобы быть интерактивными. Когда приложение становится популярным, то для достижения этого качества необходима масштабируемость, а отказоустойчивость приложения дает возможность пользователям непрерывно наслаждаться его функциями. 
 
-### Why it is Important
+### Основные строительные блоки
 
-Interactive applications are real-time, engaging, rich and collaborative. Businesses create an open and ongoing dialog with their customers by welcoming them through interactive experiences. This makes them more efficient, creates a feel of being connected and equipped to solve problems and accomplish tasks. One example is Google Docs which enables users to edit documents collaboratively, in real-time — allowing them to see each other’s edits and comments live, as they are made.
+В reactive-приложениях используются наблюдаемые модели, потоки событий и клиенты, обладающие состоянием.
 
-Users are empowered when they can interact with data that is transformed into meaningful information in real-time. Interactive applications make collaboration on this information inherent in every interface so people communicate more effectively and more often; this is deepened further by increasing the feedback granularity from traditional whole-page behavior down to a per-item level, e.g. in a single-page email web-client. Instantaneous social interactions over large distances are radically transforming how people engage with information and with each other. For instance, GitHub is revolutionizing developer collaboration through “Social Coding” with an interactive browser-based application and of course Twitter has profoundly changed the way news are spread.
+Наблюдаемые модели позволяют другим компонентам получать события при изменении состояния. Это обеспечивает соединение в реальном времени между системой и пользователем. Например, когда несколько пользователей одновременно работают над общим набором данных, то изменения непосредственно синхронизируются между ними в обоих направлениях. 
 
-Build upon an event-driven foundation, reactive applications are well equipped to be interactive. Scalability is necessary to retain this property when the application becomes popular, and resilience ensures that its users will continually enjoy its function.
+Потоки событий формируют базовую абстракцию для построения такой связи. Сохранение их реагирующими означает избегание блокирования, вместо этого разрешая асинхронные и неблокирующие трансформации. Например, поток данных в реальном времени может быть пропущен через некоторую проекцию в реальном времени, что порождает новый поток анализированных данных.
 
-### Key Building Blocks
+Большинство reactive-приложений обладают богатым веб- и мобильными клиентами, что делает их увлекательными для пользователей. Такие приложения реализуют логику и сохраняют состояние на стороне клиента, где наблюдаемые модели предоставляют механизм для обновления пользовательского интерфейса с изменением данных в реальном времени. Такие технологии как веб-сокеты и инициируемые сервером сообщения позволяют пользовательским интерфейсам напрямую подключаться к потокам событий. Таким образом событийно-ориентированные системы распространяются повсюду от серверной части до клиентской. Это позволяет реагирующим приложениям отправлять события в браузер или мобильные приложения масштабируемым и эластичным способом, используя асинхронную и неблокирующую передачу данных.
 
-Reactive applications use observable models, event streams and stateful clients.
+С учетом всего этого, становится понятным, каким образом четыре качества - *событийно-ориентированная архитектура*, *масштабируемость*,  *устойчивость* и *интерактивность* - создают связанное единое целое.
 
-Observable models enable other components to receive events when state changes. This can provide a real-time connection between users and systems. For example, when multiple users work concurrently on the same dataset, changes can be reactively synchronized bi-directionally between them.
+![Рис 4. Качества Reactive](images/full-reactive.png)
 
-Event streams form the basic abstraction on which this connection is built. Keeping them reactive means avoiding blocking and instead allowing asynchronous and non-blocking transformations. For example a stream of real-time data could be passed through a live projection that produces a new stream of analyzed data.
+## Заключение
 
-Most reactive applications have rich web and mobile clients which create an engaging user experience. These applications execute logic and store state on the client-side in which observable models provide a mechanism to update user interfaces in real-time when data changes. Technologies like WebSockets or Server-Sent Events enable user interfaces to be connected directly with event streams so the event-driven system extends all the way from the back-end to the client. This allows reactive applications to push events to browser and mobile applications in a scalable and resilient way by using asynchronous and non-blocking data transfer.
+Reactive-приложения представляют сбалансированный подход к решению современных проблем в разработке ПО. Построенные на *событийно-ориентированной архитектуре*, основанной на передаче сообщений, они представляют инструменты для обеспечения *масштабируемости* и *устойчивости*. Помимо этого, они обеспечивают *интерактивность* взаимодействия с пользователем в реальном времени. Мы ожидаем, что быстро растущее число систем последует такой архитектуре в ближайшие годы.
 
-With this in mind it becomes apparent how the four qualities *event-driven*, *scalable*, *resilient* and *interactive* are interconnected to form a cohesive whole:
-
-![fig 4. The Reactive Traits](images/full-reactive.png)
-
-## Conclusion
-
-Reactive applications represent a balanced approach to addressing a wide range of contemporary challenges in software development. Building on an *event-driven*, message-based foundation, they provide the tools needed to ensure *scalability* and *resilience*. On top of this they support rich, real-time user *interactions*. We expect that a rapidly increasing number of systems will follow this blueprint in the years ahead.
-
-[Sign the manifesto](http://www.reactivemanifesto.org/)
+[Подпишите манифест](http://www.reactivemanifesto.org/)
